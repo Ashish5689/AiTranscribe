@@ -3,7 +3,7 @@ import DashboardLayout from "./Dashboard/DashboardLayout";
 
 const Home: React.FC = () => {
   return (
-    <div className="h-screen w-full bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-blue-900">
+    <div className="h-screen w-full bg-[#f8f9fa] dark:bg-slate-900">
       <main className="h-full w-full overflow-hidden">
         <DashboardLayout />
       </main>

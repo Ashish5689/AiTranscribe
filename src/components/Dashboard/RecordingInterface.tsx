@@ -32,19 +32,21 @@ const RecordingInterface = ({
   const animationFrameRef = useRef<number | null>(null);
   const durationIntervalRef = useRef<number | null>(null);
 
-  // Update waveform visualization
+  // Update waveform visualization with more interactive wave pattern
   const updateWaveform = () => {
     const analyser = recorderRef.current.getAnalyser();
     if (analyser && status === "recording") {
       const dataArray = new Uint8Array(analyser.frequencyBinCount);
       analyser.getByteFrequencyData(dataArray);
 
-      // Convert the frequency data to waveform heights
-      const waveform = Array.from(dataArray).map((value) =>
-        Math.max(3, value / 4),
-      );
-      setWaveformData(waveform.slice(0, 50));
+      // Create a more dynamic wave pattern with some randomization
+      const waveform = Array.from(dataArray).map((value, index) => {
+        // Add some sine wave variation for more natural movement
+        const sineVariation = Math.sin(Date.now() / 200 + index / 5) * 5;
+        return Math.max(3, value / 4 + sineVariation);
+      });
 
+      setWaveformData(waveform.slice(0, 50));
       animationFrameRef.current = requestAnimationFrame(updateWaveform);
     }
   };
@@ -133,7 +135,7 @@ const RecordingInterface = ({
   }, [recordingStatus]);
 
   return (
-    <Card className="w-full h-[400px] flex flex-col items-center justify-center p-8 bg-white dark:bg-slate-800 shadow-lg border-0 rounded-xl">
+    <Card className="w-full h-[300px] flex flex-col items-center justify-center p-8 bg-white dark:bg-slate-800 shadow-md border-0 rounded-lg">
       <div className="flex flex-col items-center gap-8">
         {/* Recording button */}
         <div className="relative">
@@ -143,18 +145,18 @@ const RecordingInterface = ({
                 <Button
                   variant={status === "recording" ? "destructive" : "default"}
                   size="icon"
-                  className={`h-32 w-32 rounded-full transition-all shadow-lg ${status === "recording" ? "bg-red-500 hover:bg-red-600 animate-pulse" : "bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700"}`}
+                  className={`h-32 w-32 rounded-full transition-all shadow-md ${status === "recording" ? "bg-red-500 hover:bg-red-600 animate-pulse" : "bg-[#4285f4] hover:bg-[#3367d6]"}`}
                   onClick={
                     status === "recording" ? stopRecording : startRecording
                   }
                   disabled={status === "processing"}
                 >
                   {status === "recording" ? (
-                    <Square className="h-12 w-12" />
+                    <Square className="h-12 w-12 text-white" />
                   ) : status === "processing" ? (
-                    <Loader2 className="h-12 w-12 animate-spin" />
+                    <Loader2 className="h-12 w-12 animate-spin text-white" />
                   ) : (
-                    <Mic className="h-12 w-12" />
+                    <Mic className="h-12 w-12 text-white" />
                   )}
                 </Button>
               </TooltipTrigger>
@@ -170,18 +172,18 @@ const RecordingInterface = ({
 
           {/* Recording duration */}
           {status === "recording" && (
-            <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-red-100 text-red-800 px-2 py-1 rounded-full text-sm font-medium">
+            <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-red-100 text-red-800 px-4 py-1 rounded-full text-sm font-medium">
               {recordingDuration}
             </div>
           )}
         </div>
 
         {/* Waveform visualization */}
-        <div className="flex items-center justify-center h-16 w-full max-w-lg gap-1 px-4 py-2 bg-slate-100 dark:bg-slate-700 rounded-full">
+        <div className="flex items-center justify-center h-12 w-full max-w-lg gap-1 px-4 py-2 bg-[#f1f3f4] dark:bg-slate-700 rounded-full">
           {waveformData.map((height, index) => (
             <div
               key={index}
-              className={`w-1 rounded-full transition-all duration-150 ${status === "recording" ? "bg-gradient-to-b from-blue-400 to-indigo-600" : "bg-gray-300"}`}
+              className={`w-1 rounded-full transition-all duration-150 ${status === "recording" ? "bg-[#4285f4]" : "bg-gray-300"}`}
               style={{
                 height: `${status === "recording" ? height : 5}px`,
                 opacity: status === "recording" ? 1 : 0.5,

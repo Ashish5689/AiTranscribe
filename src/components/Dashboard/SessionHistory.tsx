@@ -64,8 +64,8 @@ const SessionHistory: React.FC<SessionHistoryProps> = ({
   const [hoveredSessionId, setHoveredSessionId] = useState<string | null>(null);
 
   return (
-    <div className="h-full w-[300px] border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex flex-col shadow-md">
-      <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30">
+    <div className="h-full w-[300px] border-r border-gray-200 dark:border-gray-700 bg-[#f1f3f4] dark:bg-slate-800 flex flex-col">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-[#f1f3f4] dark:bg-slate-800">
         <h2 className="text-xl font-semibold">Session History</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
           {sessions.length} recording{sessions.length !== 1 ? "s" : ""}
@@ -77,7 +77,7 @@ const SessionHistory: React.FC<SessionHistoryProps> = ({
           {sessions.map((session) => (
             <Card
               key={session.id}
-              className={`cursor-pointer transition-all hover:shadow-md ${selectedSessionId === session.id ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20 shadow-md" : "hover:bg-slate-50 dark:hover:bg-slate-700"}`}
+              className={`cursor-pointer transition-all hover:shadow-sm ${selectedSessionId === session.id ? "border-[#4285f4] bg-white dark:bg-slate-700 shadow-sm" : "hover:bg-white dark:hover:bg-slate-700 bg-[#f8f9fa] dark:bg-slate-800"}`}
               onClick={() => onSessionSelect(session.id)}
               onMouseEnter={() => setHoveredSessionId(session.id)}
               onMouseLeave={() => setHoveredSessionId(null)}
