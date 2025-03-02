@@ -104,7 +104,7 @@ src/
 ## 📸 Screenshots
 
 <div align="center">
-  <img src="https://via.placeholder.com/800x450.png?text=AiTranscribe+Dashboard" alt="AiTranscribe Dashboard" width="80%" />
+  <img src="https://imgur.com/a/uNyd8qw" alt="AiTranscribe Dashboard" width="80%" />
 </div>
 
 ## 🤝 Contributing
