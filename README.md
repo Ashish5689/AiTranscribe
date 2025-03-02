@@ -103,9 +103,7 @@ src/
 
 ## 📸 Screenshots
 
-<div align="center">
-  <img src="https://imgur.com/a/uNyd8qw" width="80%" />
-</div>
+https://imgur.com/a/uNyd8qw
 
 ## 🤝 Contributing
 
