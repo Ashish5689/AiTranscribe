@@ -4,11 +4,10 @@
 
 ![AiTranscribe Logo](https://img.shields.io/badge/AiTranscribe-Voice%20to%20Text-blue?style=for-the-badge&logo=react)
 
-**[Live Demo](https://aitranscribe.netlify.app/) | [Features](#features) | [Tech Stack](#tech-stack) | [Getting Started](#getting-started) | [Usage](#usage) | [Project Structure](#project-structure)**
+**[Live Demo](https://aitranscribe.netlify.app/) |
 
 A modern, sleek dashboard that records your voice and transcribes it to proper English text using the Groq API, displaying results in real-time.
 
-[![Netlify Status](https://api.netlify.com/api/v1/badges/your-netlify-badge-id/deploy-status)](https://aitranscribe.netlify.app/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-4.9.5-blue.svg)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-18.2.0-blue.svg)](https://reactjs.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3.3.0-blue.svg)](https://tailwindcss.com/)
