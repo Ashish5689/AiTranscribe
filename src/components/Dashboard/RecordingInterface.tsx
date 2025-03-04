@@ -135,8 +135,8 @@ const RecordingInterface = ({
   }, [recordingStatus]);
 
   return (
-    <Card className="w-full h-[300px] flex flex-col items-center justify-center p-8 bg-white dark:bg-slate-800 shadow-md border-0 rounded-lg">
-      <div className="flex flex-col items-center gap-8">
+    <Card className="w-full h-auto md:h-[250px] flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-br from-white to-[#f8f9fa] dark:from-slate-800 dark:to-slate-900 shadow-lg border border-gray-100 dark:border-gray-700 rounded-xl">
+      <div className="flex flex-col items-center gap-4 md:gap-6 w-full">
         {/* Recording button */}
         <div className="relative">
           <TooltipProvider>
@@ -145,18 +145,22 @@ const RecordingInterface = ({
                 <Button
                   variant={status === "recording" ? "destructive" : "default"}
                   size="icon"
-                  className={`h-32 w-32 rounded-full transition-all shadow-md ${status === "recording" ? "bg-red-500 hover:bg-red-600 animate-pulse" : "bg-[#4285f4] hover:bg-[#3367d6]"}`}
+                  className={`h-20 w-20 md:h-24 md:w-24 rounded-full transition-all shadow-lg ${
+                    status === "recording" 
+                      ? "bg-red-500 hover:bg-red-600 animate-pulse" 
+                      : "bg-gradient-to-r from-[#4285f4] to-[#5295ff] hover:from-[#3367d6] hover:to-[#4285f4]"
+                  }`}
                   onClick={
                     status === "recording" ? stopRecording : startRecording
                   }
                   disabled={status === "processing"}
                 >
                   {status === "recording" ? (
-                    <Square className="h-12 w-12 text-white" />
+                    <Square className="h-8 w-8 md:h-10 md:w-10 text-white" />
                   ) : status === "processing" ? (
-                    <Loader2 className="h-12 w-12 animate-spin text-white" />
+                    <Loader2 className="h-8 w-8 md:h-10 md:w-10 animate-spin text-white" />
                   ) : (
-                    <Mic className="h-12 w-12 text-white" />
+                    <Mic className="h-8 w-8 md:h-10 md:w-10 text-white" />
                   )}
                 </Button>
               </TooltipTrigger>
@@ -172,18 +176,22 @@ const RecordingInterface = ({
 
           {/* Recording duration */}
           {status === "recording" && (
-            <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-red-100 text-red-800 px-4 py-1 rounded-full text-sm font-medium">
+            <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-red-100 text-red-800 px-4 py-1 rounded-full text-sm font-medium shadow-sm">
               {recordingDuration}
             </div>
           )}
         </div>
 
         {/* Waveform visualization */}
-        <div className="flex items-center justify-center h-12 w-full max-w-lg gap-1 px-4 py-2 bg-[#f1f3f4] dark:bg-slate-700 rounded-full">
+        <div className="flex items-center justify-center h-10 md:h-12 w-full max-w-lg gap-[2px] md:gap-1 px-4 py-2 bg-[#f1f3f4] dark:bg-slate-700 rounded-full shadow-inner">
           {waveformData.map((height, index) => (
             <div
               key={index}
-              className={`w-1 rounded-full transition-all duration-150 ${status === "recording" ? "bg-[#4285f4]" : "bg-gray-300"}`}
+              className={`w-[2px] md:w-1 rounded-full transition-all duration-150 ${
+                status === "recording" 
+                  ? "bg-gradient-to-t from-[#4285f4] to-[#5295ff]" 
+                  : "bg-gray-300 dark:bg-gray-600"
+              }`}
               style={{
                 height: `${status === "recording" ? height : 5}px`,
                 opacity: status === "recording" ? 1 : 0.5,
@@ -193,27 +201,29 @@ const RecordingInterface = ({
         </div>
 
         {/* Status text */}
-        <div className="text-center">
+        <div className="text-center mt-2">
           {status === "idle" && (
-            <p className="text-gray-500">
-              Click the microphone to start recording
+            <p className="text-gray-500 text-sm md:text-base">
+              Tap the microphone to start recording
             </p>
           )}
           {status === "recording" && (
-            <p className="text-primary font-medium">Recording in progress...</p>
+            <p className="text-[#4285f4] font-medium text-sm md:text-base">
+              Recording in progress...
+            </p>
           )}
           {status === "processing" && (
-            <p className="text-amber-500 font-medium">
-              Transcribing your recording with Groq API...
+            <p className="text-amber-500 font-medium text-sm md:text-base">
+              Transcribing your recording...
             </p>
           )}
           {status === "completed" && (
-            <p className="text-green-500 font-medium">
+            <p className="text-green-500 font-medium text-sm md:text-base">
               Recording transcribed successfully!
             </p>
           )}
           {status === "error" && (
-            <p className="text-red-500 font-medium">
+            <p className="text-red-500 font-medium text-sm md:text-base">
               Error processing audio. Please try again.
             </p>
           )}

@@ -10,6 +10,7 @@ import {
   getSession,
   formatDuration,
 } from "@/lib/sessionStorage";
+import { Menu, X } from "lucide-react";
 
 interface DashboardLayoutProps {
   initialSessionId?: string;
@@ -30,6 +31,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const [recordingStartTime, setRecordingStartTime] = useState<number | null>(
     null,
   );
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
 
   // Load sessions from storage on component mount
   useEffect(() => {
@@ -62,6 +64,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       setEditedText(session.transcription);
       setCurrentTimestamp(session.timestamp);
       setIsEditing(false);
+    }
+    // Close sidebar on mobile after selection
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
     }
   };
 
@@ -130,19 +136,46 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     }, 100);
   };
 
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   return (
-    <div className="flex h-full w-full bg-[#f8f9fa] dark:bg-slate-900">
-      {/* Session History Sidebar */}
-      <SessionHistory
-        sessions={sessions}
-        selectedSessionId={selectedSessionId}
-        onSessionSelect={handleSessionSelect}
-        onSessionDelete={handleSessionDelete}
-      />
+    <div className="flex h-full w-full bg-[#f8f9fa] dark:bg-slate-900 relative">
+      {/* Mobile Sidebar Toggle Button */}
+      <button
+        onClick={toggleSidebar}
+        className="md:hidden fixed top-4 left-4 z-50 bg-[#4285f4] text-white p-2 rounded-full shadow-lg"
+        aria-label="Toggle sidebar"
+      >
+        {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+      </button>
+
+      {/* Session History Sidebar - Mobile Friendly */}
+      <div
+        className={`fixed md:relative z-40 h-full transition-all duration-300 ease-in-out ${
+          sidebarOpen ? "left-0" : "-left-full md:left-0"
+        } md:w-[300px] w-[85%] max-w-[300px]`}
+      >
+        <SessionHistory
+          sessions={sessions}
+          selectedSessionId={selectedSessionId}
+          onSessionSelect={handleSessionSelect}
+          onSessionDelete={handleSessionDelete}
+        />
+      </div>
+
+      {/* Overlay for mobile when sidebar is open */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col p-6 overflow-hidden">
-        <div className="flex items-center mb-6 space-x-2">
+      <div className="flex-1 flex flex-col p-4 md:p-6 overflow-hidden md:ml-0 ml-0">
+        <div className="flex items-center mb-4 md:mb-6 space-x-2 mt-10 md:mt-0 justify-center md:justify-start">
           <div className="bg-[#4285f4] p-2 rounded-lg">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -160,13 +193,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               <line x1="12" x2="12" y1="19" y2="22"></line>
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-[#4285f4] dark:text-[#4285f4]">
-            AI Powered Voice Transcription Dashboard
+          <h1 className="text-xl md:text-2xl font-bold text-[#4285f4] dark:text-[#4285f4] truncate">
+            AI Voice Transcription
           </h1>
         </div>
 
         {/* Main Content Area with Recording Interface and Transcription */}
-        <div className="flex flex-col space-y-6 h-full">
+        <div className="flex flex-col space-y-4 md:space-y-6 h-full">
           {/* Recording Interface */}
           <div className="flex-none">
             <RecordingInterface
@@ -177,11 +210,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
           {/* Transcription Display */}
           <div className="flex-1 overflow-hidden">
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex flex-wrap items-center justify-between mb-2 gap-2">
               <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
                 Transcription
               </h2>
-              <div className="flex space-x-2">
+              <div className="flex flex-wrap space-x-2 items-center">
                 <button
                   onClick={() => {
                     if (currentTranscription) {
@@ -328,7 +361,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                 </div>
               </div>
             </div>
-            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-4 h-full overflow-auto border border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-slate-800 rounded-lg shadow-md p-3 md:p-4 h-full overflow-auto border border-gray-200 dark:border-gray-700">
               {recordingStatus === "processing" ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">

@@ -64,20 +64,24 @@ const SessionHistory: React.FC<SessionHistoryProps> = ({
   const [hoveredSessionId, setHoveredSessionId] = useState<string | null>(null);
 
   return (
-    <div className="h-full w-[300px] border-r border-gray-200 dark:border-gray-700 bg-[#f1f3f4] dark:bg-slate-800 flex flex-col">
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-[#f1f3f4] dark:bg-slate-800">
-        <h2 className="text-xl font-semibold">Session History</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+    <div className="h-full w-full flex flex-col bg-gradient-to-b from-[#f1f3f4] to-[#e8eaed] dark:from-slate-800 dark:to-slate-900 shadow-lg">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-[#4285f4]/10 backdrop-blur-sm">
+        <h2 className="text-xl font-semibold text-[#4285f4]">Session History</h2>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
           {sessions.length} recording{sessions.length !== 1 ? "s" : ""}
         </p>
       </div>
 
       <ScrollArea className="flex-1">
-        <div className="p-4 space-y-3">
+        <div className="p-3 space-y-3">
           {sessions.map((session) => (
             <Card
               key={session.id}
-              className={`cursor-pointer transition-all hover:shadow-sm ${selectedSessionId === session.id ? "border-[#4285f4] bg-white dark:bg-slate-700 shadow-sm" : "hover:bg-white dark:hover:bg-slate-700 bg-[#f8f9fa] dark:bg-slate-800"}`}
+              className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
+                selectedSessionId === session.id 
+                  ? "border-[#4285f4] bg-white dark:bg-slate-700 shadow-md scale-[1.02] transform" 
+                  : "hover:bg-white dark:hover:bg-slate-700 bg-[#f8f9fa] dark:bg-slate-800 hover:scale-[1.01] transform"
+              }`}
               onClick={() => onSessionSelect(session.id)}
               onMouseEnter={() => setHoveredSessionId(session.id)}
               onMouseLeave={() => setHoveredSessionId(null)}
@@ -85,14 +89,15 @@ const SessionHistory: React.FC<SessionHistoryProps> = ({
               <CardContent className="p-3 relative">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="font-medium truncate max-w-[180px]">
+                    <h3 className="font-medium truncate max-w-[180px] text-gray-800 dark:text-gray-200">
                       {session.title}
                     </h3>
                     <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1">
                       <Clock className="h-3 w-3 mr-1" />
                       <span>{session.timestamp}</span>
                     </div>
-                    <div className="text-xs mt-1 text-gray-500 dark:text-gray-400">
+                    <div className="text-xs mt-1 text-gray-500 dark:text-gray-400 flex items-center">
+                      <span className="inline-block w-2 h-2 rounded-full bg-[#4285f4] mr-1.5"></span>
                       Duration: {session.duration}
                     </div>
                   </div>
@@ -105,7 +110,7 @@ const SessionHistory: React.FC<SessionHistoryProps> = ({
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7 absolute top-2 right-2"
+                            className="h-7 w-7 absolute top-2 right-2 opacity-80 hover:opacity-100 hover:bg-red-100 dark:hover:bg-red-900/30 transition-all"
                             onClick={(e) => {
                               e.stopPropagation();
                               onSessionDelete(session.id);
@@ -124,6 +129,31 @@ const SessionHistory: React.FC<SessionHistoryProps> = ({
               </CardContent>
             </Card>
           ))}
+          
+          {sessions.length === 0 && (
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <div className="mb-3 opacity-50">
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  width="40" 
+                  height="40" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                  className="mx-auto"
+                >
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                  <line x1="12" x2="12" y1="19" y2="22"></line>
+                </svg>
+              </div>
+              <p className="font-medium">No recordings yet</p>
+              <p className="text-xs mt-1">Start recording to create sessions</p>
+            </div>
+          )}
         </div>
       </ScrollArea>
     </div>
