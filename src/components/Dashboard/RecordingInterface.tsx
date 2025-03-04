@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Mic, Square, Loader2 } from "lucide-react";
+import { Mic, Square, Loader2, Clock } from "lucide-react";
 import { Button } from "../ui/button";
-import { Card } from "../ui/card";
+import { Card, CardContent } from "../ui/card";
 import {
   Tooltip,
   TooltipContent,
@@ -23,10 +23,9 @@ const RecordingInterface = ({
 }: RecordingInterfaceProps) => {
   const [status, setStatus] = useState<RecordingStatus>(recordingStatus);
   const [waveformData, setWaveformData] = useState<number[]>(Array(50).fill(5));
-  const [recordingStartTime, setRecordingStartTime] = useState<number | null>(
-    null,
-  );
+  const [recordingStartTime, setRecordingStartTime] = useState<number | null>(null);
   const [recordingDuration, setRecordingDuration] = useState<string>("0:00");
+  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
 
   const recorderRef = useRef<AudioRecorder>(new AudioRecorder());
   const animationFrameRef = useRef<number | null>(null);
@@ -39,11 +38,10 @@ const RecordingInterface = ({
       const dataArray = new Uint8Array(analyser.frequencyBinCount);
       analyser.getByteFrequencyData(dataArray);
 
-      // Create a more dynamic wave pattern with some randomization
-      const waveform = Array.from(dataArray).map((value, index) => {
-        // Add some sine wave variation for more natural movement
-        const sineVariation = Math.sin(Date.now() / 200 + index / 5) * 5;
-        return Math.max(3, value / 4 + sineVariation);
+      // Create a more dynamic wave pattern based on actual audio input
+      const waveform = Array.from(dataArray).map((value) => {
+        // Scale the value and add a small minimum height
+        return Math.max(3, value / 1.5);
       });
 
       setWaveformData(waveform.slice(0, 50));
@@ -51,29 +49,23 @@ const RecordingInterface = ({
     }
   };
 
-  // Update recording duration
-  const updateDuration = () => {
-    if (recordingStartTime && status === "recording") {
-      const durationInSeconds = (Date.now() - recordingStartTime) / 1000;
-      const minutes = Math.floor(durationInSeconds / 60);
-      const seconds = Math.floor(durationInSeconds % 60);
-      setRecordingDuration(`${minutes}:${seconds.toString().padStart(2, "0")}`);
-    }
+  // Format the elapsed seconds into a readable duration string
+  const formatDuration = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
   // Start recording
   const startRecording = async () => {
     try {
       setStatus("recording");
+      setElapsedSeconds(0);
+      setRecordingDuration("0:00");
       setRecordingStartTime(Date.now());
 
       // Start audio recording
       await recorderRef.current.startRecording();
-
-      // Start duration timer
-      durationIntervalRef.current = window.setInterval(updateDuration, 1000);
-      // Call updateDuration immediately to show initial time
-      updateDuration();
 
       // Start visualization
       updateWaveform();
@@ -89,19 +81,14 @@ const RecordingInterface = ({
       try {
         setStatus("processing");
 
-        // Stop recording and get audio blob
-        const audioBlob = await recorderRef.current.stopRecording();
-
-        // Clear timers and animation
-        if (durationIntervalRef.current) {
-          clearInterval(durationIntervalRef.current);
-          durationIntervalRef.current = null;
-        }
-
+        // Cancel animation frame for waveform
         if (animationFrameRef.current) {
           cancelAnimationFrame(animationFrameRef.current);
           animationFrameRef.current = null;
         }
+
+        // Stop recording and get audio blob
+        const audioBlob = await recorderRef.current.stopRecording();
 
         // Transcribe audio using Groq API
         const transcript = await transcribeAudio(audioBlob);
@@ -116,119 +103,182 @@ const RecordingInterface = ({
     }
   };
 
+  // Effect to handle the timer updates
+  useEffect(() => {
+    let intervalId: number | null = null;
+    
+    if (status === "recording") {
+      // Start the timer immediately
+      setElapsedSeconds(0);
+      
+      // Update the timer every second
+      intervalId = window.setInterval(() => {
+        setElapsedSeconds(prev => {
+          const newValue = prev + 1;
+          setRecordingDuration(formatDuration(newValue));
+          return newValue;
+        });
+      }, 1000);
+    }
+    
+    // Cleanup function to clear interval when recording stops
+    return () => {
+      if (intervalId !== null) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [status]);
+
   // Clean up on unmount
   useEffect(() => {
     return () => {
       if (durationIntervalRef.current) {
         clearInterval(durationIntervalRef.current);
       }
-
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
+      recorderRef.current.stopRecording().catch(console.error);
     };
   }, []);
 
-  // Update status when prop changes
+  // Update status based on props
   useEffect(() => {
     setStatus(recordingStatus);
   }, [recordingStatus]);
 
   return (
-    <Card className="w-full h-auto md:h-[250px] flex flex-col items-center justify-center p-4 md:p-8 bg-gradient-to-br from-white to-[#f8f9fa] dark:from-slate-800 dark:to-slate-900 shadow-lg border border-gray-100 dark:border-gray-700 rounded-xl">
-      <div className="flex flex-col items-center gap-4 md:gap-6 w-full">
-        {/* Recording button */}
-        <div className="relative">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={status === "recording" ? "destructive" : "default"}
-                  size="icon"
-                  className={`h-20 w-20 md:h-24 md:w-24 rounded-full transition-all shadow-lg ${
-                    status === "recording" 
-                      ? "bg-red-500 hover:bg-red-600 animate-pulse" 
-                      : "bg-gradient-to-r from-[#4285f4] to-[#5295ff] hover:from-[#3367d6] hover:to-[#4285f4]"
-                  }`}
-                  onClick={
-                    status === "recording" ? stopRecording : startRecording
-                  }
-                  disabled={status === "processing"}
-                >
-                  {status === "recording" ? (
-                    <Square className="h-8 w-8 md:h-10 md:w-10 text-white" />
-                  ) : status === "processing" ? (
-                    <Loader2 className="h-8 w-8 md:h-10 md:w-10 animate-spin text-white" />
-                  ) : (
-                    <Mic className="h-8 w-8 md:h-10 md:w-10 text-white" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {status === "recording"
-                  ? "Stop Recording"
-                  : status === "processing"
-                    ? "Processing..."
-                    : "Start Recording"}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          {/* Recording duration */}
+    <Card className="w-full overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800">
+      <CardContent className="p-4 md:p-6">
+        <div className="flex flex-col space-y-4">
+          {/* Prominent Timer Display - Only visible when recording */}
           {status === "recording" && (
-            <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 bg-red-100 text-red-800 px-4 py-1 rounded-full text-sm font-medium shadow-sm">
-              {recordingDuration}
+            <div className="flex items-center justify-center">
+              <div className="bg-red-50 dark:bg-red-900/20 px-4 py-2 rounded-full shadow-md flex items-center space-x-2 border border-red-100 dark:border-red-800">
+                <div className="h-3 w-3 rounded-full bg-red-500 animate-pulse"></div>
+                <Clock className="h-4 w-4 text-red-500" />
+                <span className="text-xl font-bold text-red-500">{recordingDuration}</span>
+              </div>
             </div>
           )}
-        </div>
 
-        {/* Waveform visualization */}
-        <div className="flex items-center justify-center h-10 md:h-12 w-full max-w-lg gap-[2px] md:gap-1 px-4 py-2 bg-[#f1f3f4] dark:bg-slate-700 rounded-full shadow-inner">
-          {waveformData.map((height, index) => (
+          {/* Waveform Visualizer */}
+          <div className={`h-24 w-full rounded-lg flex items-center justify-center relative overflow-hidden ${
+            status === "recording" 
+              ? "bg-gradient-to-r from-red-50 to-indigo-50 dark:from-red-900/10 dark:to-indigo-900/10 border border-red-100 dark:border-red-900/20" 
+              : "bg-gradient-to-r from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-800"
+          }`}>
+            {status === "recording" && (
+              <div className="absolute top-2 left-3 px-2 py-1 bg-red-100 dark:bg-red-900/30 rounded-md shadow-sm z-10">
+                <div className="flex items-center space-x-1">
+                  <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse"></div>
+                  <span className="text-xs font-medium text-red-700 dark:text-red-300">RECORDING</span>
+                </div>
+              </div>
+            )}
+            
             <div
-              key={index}
-              className={`w-[2px] md:w-1 rounded-full transition-all duration-150 ${
-                status === "recording" 
-                  ? "bg-gradient-to-t from-[#4285f4] to-[#5295ff]" 
-                  : "bg-gray-300 dark:bg-gray-600"
+              className={`w-full h-full flex items-center justify-center ${
+                status === "idle" ? "opacity-50" : "opacity-100"
               }`}
-              style={{
-                height: `${status === "recording" ? height : 5}px`,
-                opacity: status === "recording" ? 1 : 0.5,
-              }}
-            />
-          ))}
-        </div>
+            >
+              {/* Animated waveform visualization */}
+              <div className="flex items-center h-full space-x-[2px] px-2">
+                {waveformData.map((height, index) => (
+                  <div
+                    key={index}
+                    className={`w-1.5 rounded-full transition-all duration-100 ease-in-out ${
+                      status === "recording"
+                        ? "bg-gradient-to-t from-blue-400 to-indigo-500 animate-pulse"
+                        : status === "processing"
+                        ? "bg-gradient-to-t from-yellow-400 to-orange-500"
+                        : "bg-gradient-to-t from-gray-300 to-gray-400 dark:from-gray-700 dark:to-gray-600"
+                    }`}
+                    style={{
+                      height: `${Math.max(4, height)}px`,
+                      transform: `scaleY(${status === "recording" ? 1 : 0.5})`,
+                      opacity: status === "idle" ? 0.5 : 1,
+                      transition: "all 100ms ease-in-out",
+                      animationDelay: `${index * 20}ms`,
+                    }}
+                  ></div>
+                ))}
+              </div>
+            </div>
 
-        {/* Status text */}
-        <div className="text-center mt-2">
-          {status === "idle" && (
-            <p className="text-gray-500 text-sm md:text-base">
-              Tap the microphone to start recording
-            </p>
-          )}
-          {status === "recording" && (
-            <p className="text-[#4285f4] font-medium text-sm md:text-base">
-              Recording in progress...
-            </p>
-          )}
-          {status === "processing" && (
-            <p className="text-amber-500 font-medium text-sm md:text-base">
-              Transcribing your recording...
-            </p>
-          )}
-          {status === "completed" && (
-            <p className="text-green-500 font-medium text-sm md:text-base">
-              Recording transcribed successfully!
-            </p>
-          )}
-          {status === "error" && (
-            <p className="text-red-500 font-medium text-sm md:text-base">
-              Error processing audio. Please try again.
-            </p>
-          )}
+            {/* Processing overlay */}
+            {status === "processing" && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm">
+                <div className="flex flex-col items-center space-y-2">
+                  <Loader2 className="w-6 h-6 text-white animate-spin" />
+                  <p className="text-sm text-white font-medium">Processing...</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Recording controls and status */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              {/* Record/Stop button */}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      onClick={status === "recording" ? stopRecording : startRecording}
+                      disabled={status === "processing"}
+                      className={`rounded-full w-12 h-12 p-0 ${
+                        status === "recording"
+                          ? "bg-red-500 hover:bg-red-600 shadow-md hover:shadow-lg"
+                          : "bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 shadow-md hover:shadow-lg"
+                      } transition-all duration-300`}
+                    >
+                      {status === "recording" ? (
+                        <Square className="h-5 w-5 text-white" />
+                      ) : (
+                        <Mic className="h-5 w-5 text-white animate-pulse" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      {status === "recording"
+                        ? "Stop Recording"
+                        : "Start Recording"}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              {/* Status */}
+              <div className="flex flex-col">
+                <span
+                  className={`text-sm font-medium ${
+                    status === "recording"
+                      ? "text-red-500"
+                      : status === "processing"
+                      ? "text-yellow-500"
+                      : "text-gray-500 dark:text-gray-400"
+                  }`}
+                >
+                  {status === "recording"
+                    ? "Recording in progress..."
+                    : status === "processing"
+                    ? "Processing..."
+                    : "Ready to record"}
+                </span>
+              </div>
+            </div>
+
+            {/* Info message */}
+            <div className="text-xs text-gray-500 dark:text-gray-400 italic hidden md:block">
+              {status === "idle" && "Click the microphone button to start recording"}
+              {status === "recording" && "Click the stop button when you're finished"}
+              {status === "processing" && "Converting your speech to text..."}
+            </div>
+          </div>
         </div>
-      </div>
+      </CardContent>
     </Card>
   );
 };

@@ -13,7 +13,12 @@ export class AudioRecorder {
       // Set up audio context and analyser for visualization
       this.audioContext = new AudioContext();
       this.analyser = this.audioContext.createAnalyser();
-      this.analyser.fftSize = 128;
+      
+      // Increase FFT size for more detailed visualization
+      this.analyser.fftSize = 256;
+      
+      // Adjust smoothing to make visualization more responsive
+      this.analyser.smoothingTimeConstant = 0.7;
 
       const source = this.audioContext.createMediaStreamSource(this.stream);
       source.connect(this.analyser);

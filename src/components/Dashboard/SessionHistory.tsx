@@ -10,6 +10,16 @@ import {
 } from "../ui/tooltip";
 import { Clock, Trash2 } from "lucide-react";
 import { Session } from "@/types/session";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../ui/alert-dialog";
 
 interface SessionHistoryProps {
   sessions?: Session[];
@@ -62,101 +72,145 @@ const SessionHistory: React.FC<SessionHistoryProps> = ({
   selectedSessionId = "1",
 }) => {
   const [hoveredSessionId, setHoveredSessionId] = useState<string | null>(null);
+  const [sessionToDelete, setSessionToDelete] = useState<string | null>(null);
+
+  const handleDeleteClick = (sessionId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setSessionToDelete(sessionId);
+  };
+
+  const handleConfirmDelete = () => {
+    if (sessionToDelete) {
+      onSessionDelete(sessionToDelete);
+      setSessionToDelete(null);
+    }
+  };
 
   return (
-    <div className="h-full w-full flex flex-col bg-gradient-to-b from-[#f1f3f4] to-[#e8eaed] dark:from-slate-800 dark:to-slate-900 shadow-lg">
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-[#4285f4]/10 backdrop-blur-sm">
-        <h2 className="text-xl font-semibold text-[#4285f4]">Session History</h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-          {sessions.length} recording{sessions.length !== 1 ? "s" : ""}
+    <Card className="w-full h-full border-none rounded-none flex flex-col bg-gradient-to-b from-gray-50 to-white dark:from-slate-900 dark:to-slate-800 shadow-none overflow-hidden">
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-900 shadow-sm">
+        <h2 className="text-lg font-semibold bg-gradient-to-r from-gray-700 to-gray-900 dark:from-gray-300 dark:to-gray-100 bg-clip-text text-transparent">
+          Recording History
+        </h2>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+          {sessions.length > 0
+            ? `${sessions.length} saved recording${sessions.length !== 1 ? "s" : ""}`
+            : "No recordings yet"}
         </p>
       </div>
 
-      <ScrollArea className="flex-1">
-        <div className="p-3 space-y-3">
-          {sessions.map((session) => (
-            <Card
-              key={session.id}
-              className={`cursor-pointer transition-all duration-200 hover:shadow-md ${
-                selectedSessionId === session.id 
-                  ? "border-[#4285f4] bg-white dark:bg-slate-700 shadow-md scale-[1.02] transform" 
-                  : "hover:bg-white dark:hover:bg-slate-700 bg-[#f8f9fa] dark:bg-slate-800 hover:scale-[1.01] transform"
-              }`}
-              onClick={() => onSessionSelect(session.id)}
-              onMouseEnter={() => setHoveredSessionId(session.id)}
-              onMouseLeave={() => setHoveredSessionId(null)}
-            >
-              <CardContent className="p-3 relative">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-medium truncate max-w-[180px] text-gray-800 dark:text-gray-200">
-                      {session.title}
-                    </h3>
-                    <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      <Clock className="h-3 w-3 mr-1" />
-                      <span>{session.timestamp}</span>
-                    </div>
-                    <div className="text-xs mt-1 text-gray-500 dark:text-gray-400 flex items-center">
-                      <span className="inline-block w-2 h-2 rounded-full bg-[#4285f4] mr-1.5"></span>
-                      Duration: {session.duration}
-                    </div>
-                  </div>
-
-                  {(hoveredSessionId === session.id ||
-                    selectedSessionId === session.id) && (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 absolute top-2 right-2 opacity-80 hover:opacity-100 hover:bg-red-100 dark:hover:bg-red-900/30 transition-all"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onSessionDelete(session.id);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4 text-gray-500 hover:text-red-500" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Delete session</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-          
-          {sessions.length === 0 && (
-            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-              <div className="mb-3 opacity-50">
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  width="40" 
-                  height="40" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                  className="mx-auto"
+      {sessions.length > 0 ? (
+        <ScrollArea className="flex-grow">
+          <div className="p-2">
+            {sessions.map((session) => (
+              <div
+                key={session.id}
+                className={`mb-2 transition-all duration-200 transform hover:translate-x-1 ${
+                  selectedSessionId === session.id
+                    ? "scale-[1.02]"
+                    : "scale-100"
+                }`}
+              >
+                <Card
+                  className={`cursor-pointer border overflow-hidden transition-all duration-200 ${
+                    selectedSessionId === session.id
+                      ? "border-blue-500/50 bg-blue-50/50 dark:bg-blue-900/20 dark:border-blue-700/50 shadow-md hover:shadow-lg"
+                      : "border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800 hover:shadow-md"
+                  }`}
+                  onClick={() => onSessionSelect(session.id)}
                 >
-                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
-                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                  <line x1="12" x2="12" y1="19" y2="22"></line>
-                </svg>
+                  <CardContent className="p-3">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate text-gray-900 dark:text-gray-100">
+                          {session.title || "Untitled Recording"}
+                        </div>
+                        <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mt-1 space-x-2">
+                          {session.duration && (
+                            <div className="bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded text-[10px] font-medium flex items-center">
+                              <Clock size={10} className="mr-1" />
+                              {session.duration}
+                            </div>
+                          )}
+                        </div>
+                        {session.transcription && (
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2 overflow-hidden">
+                            {session.transcription}
+                          </div>
+                        )}
+                      </div>
+
+                      <TooltipProvider>
+                        <Tooltip delayDuration={300}>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="group ml-1 h-6 w-6 text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 -mr-1 transition-all duration-200 relative"
+                              onClick={(e) => handleDeleteClick(session.id, e)}
+                            >
+                              <span className="absolute inset-0 bg-red-100 dark:bg-red-900/20 rounded-full scale-0 group-hover:scale-100 transition-transform duration-200"></span>
+                              <Trash2 size={14} className="relative z-10" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="left" align="center" className="z-[100]">
+                            <p>Delete recording</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-              <p className="font-medium">No recordings yet</p>
-              <p className="text-xs mt-1">Start recording to create sessions</p>
-            </div>
-          )}
+            ))}
+          </div>
+        </ScrollArea>
+      ) : (
+        <div className="flex-grow flex flex-col items-center justify-center p-6 text-center text-gray-500 dark:text-gray-400">
+          <div className="w-16 h-16 mb-4 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="text-gray-400 dark:text-gray-500"
+            >
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" x2="12" y1="19" y2="22"></line>
+            </svg>
+          </div>
+          <p className="font-medium">No recordings yet</p>
+          <p className="text-xs mt-1">Your saved recordings will appear here</p>
         </div>
-      </ScrollArea>
-    </div>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={sessionToDelete !== null} onOpenChange={(isOpen) => !isOpen && setSessionToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Recording</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this recording? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmDelete}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </Card>
   );
 };
 

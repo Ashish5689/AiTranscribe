@@ -101,6 +101,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   const handleRecordingComplete = (audioBlob: Blob, transcript: string) => {
     const now = new Date();
     const timestamp = now.toLocaleString();
+    
+    // Format the date/time for the title in a more user-friendly way
+    const formattedDate = now.toLocaleDateString();
+    const formattedTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
     // Calculate duration
     let duration = "0:00";
@@ -112,7 +116,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
     // Create new session
     const newSession: Session = {
       id: Date.now().toString(),
-      title: `Recording ${timestamp}`,
+      title: `Recording ${formattedDate}, ${formattedTime}`,
       timestamp,
       duration,
       transcription: transcript,
@@ -141,12 +145,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   };
 
   return (
-    <div className="flex h-full w-full bg-[#f8f9fa] dark:bg-slate-900 relative">
-      {/* Mobile Sidebar Toggle Button */}
+    <div className={`flex h-full md:flex-row flex-col relative ${recordingStatus === "recording" ? "recording-active" : ""}`}>
+      {/* Mobile toggle button */}
       <button
         onClick={toggleSidebar}
-        className="md:hidden fixed top-4 left-4 z-50 bg-[#4285f4] text-white p-2 rounded-full shadow-lg"
-        aria-label="Toggle sidebar"
+        className="fixed top-2 left-2 z-50 rounded-full p-2 bg-white dark:bg-slate-800 shadow-md md:hidden"
       >
         {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
@@ -155,7 +158,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       <div
         className={`fixed md:relative z-40 h-full transition-all duration-300 ease-in-out ${
           sidebarOpen ? "left-0" : "-left-full md:left-0"
-        } md:w-[300px] w-[85%] max-w-[300px]`}
+        } md:w-[300px] w-[85%] max-w-[300px] shadow-lg`}
       >
         <SessionHistory
           sessions={sessions}
@@ -168,15 +171,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
       {/* Overlay for mobile when sidebar is open */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden backdrop-blur-sm"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col p-4 md:p-6 overflow-hidden md:ml-0 ml-0">
-        <div className="flex items-center mb-4 md:mb-6 space-x-2 mt-10 md:mt-0 justify-center md:justify-start">
-          <div className="bg-[#4285f4] p-2 rounded-lg">
+        <div className="flex items-center mb-6 md:mb-8 space-x-2 mt-10 md:mt-0 justify-center md:justify-start">
+          <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-2.5 rounded-xl shadow-md transition-all duration-300 hover:shadow-lg">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               width="24"
@@ -187,15 +190,42 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
+              className="animate-pulse"
             >
               <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
               <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
               <line x1="12" x2="12" y1="19" y2="22"></line>
             </svg>
           </div>
-          <h1 className="text-xl md:text-2xl font-bold text-[#4285f4] dark:text-[#4285f4] truncate">
-            AI Voice Transcription
-          </h1>
+          <div className="flex flex-col">
+            <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-500 to-indigo-600 bg-clip-text text-transparent truncate">
+              AI Voice Transcription
+            </h1>
+            <p className="text-xs text-gray-500 dark:text-gray-400">Transform your voice into text instantly</p>
+          </div>
+          <div className="ml-auto">
+            <button 
+              onClick={() => {
+                document.documentElement.classList.toggle('dark');
+              }}
+              className="p-2 rounded-lg bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="hidden dark:block">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+              </svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="block dark:hidden">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Main Content Area with Recording Interface and Transcription */}
@@ -211,7 +241,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
           {/* Transcription Display */}
           <div className="flex-1 overflow-hidden">
             <div className="flex flex-wrap items-center justify-between mb-2 gap-2">
-              <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+              <h2 className="text-lg font-semibold bg-gradient-to-r from-gray-700 to-gray-900 dark:from-gray-300 dark:to-gray-100 bg-clip-text text-transparent">
                 Transcription
               </h2>
               <div className="flex flex-wrap space-x-2 items-center">

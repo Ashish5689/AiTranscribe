@@ -23,6 +23,7 @@ const TranscriptionDisplay = ({
 }: TranscriptionDisplayProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState(transcription);
+  const [showCopyFeedback, setShowCopyFeedback] = useState(false);
 
   // Update editedText when transcription prop changes
   React.useEffect(() => {
@@ -31,7 +32,8 @@ const TranscriptionDisplay = ({
 
   const handleCopyToClipboard = () => {
     navigator.clipboard.writeText(editedText);
-    // In a real implementation, you would show a toast notification here
+    setShowCopyFeedback(true);
+    setTimeout(() => setShowCopyFeedback(false), 2000);
   };
 
   const handleDownload = () => {
@@ -59,58 +61,32 @@ const TranscriptionDisplay = ({
   };
 
   return (
-    <Card className="w-full h-full bg-white dark:bg-slate-800 overflow-hidden flex flex-col shadow-lg border-0 rounded-xl">
-      <CardHeader className="pb-2 pt-4 px-4 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800 dark:to-blue-900/30">
-        <div className="flex justify-between items-center">
-          <CardTitle className="text-lg font-medium">Transcription</CardTitle>
-          <div className="flex space-x-2">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={handleCopyToClipboard}
-                    disabled={isProcessing || !transcription}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Copy to clipboard</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={handleDownload}
-                    disabled={isProcessing || !transcription}
-                  >
-                    <Download className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Download as text file</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
+    <Card className="w-full h-full flex flex-col overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 border border-gray-200 dark:border-gray-700 bg-white dark:bg-slate-800">
+      <CardHeader className="p-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-slate-900">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg font-medium">
+            <span className="bg-gradient-to-r from-gray-700 to-gray-900 dark:from-gray-300 dark:to-gray-100 bg-clip-text text-transparent">
+              {isProcessing ? "Processing..." : "Transcription"}
+            </span>
+            {timestamp && (
+              <span className="text-xs text-gray-500 dark:text-gray-400 font-normal ml-2">
+                {timestamp}
+              </span>
+            )}
+          </CardTitle>
+          <div className="flex items-center space-x-1">
             {isEditing ? (
               <>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="icon"
+                        className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20"
                         onClick={handleSave}
                       >
-                        <Save className="h-4 w-4" />
+                        <Save size={16} />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -118,16 +94,16 @@ const TranscriptionDisplay = ({
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="icon"
+                        className="h-8 w-8 text-gray-600 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:bg-gray-700"
                         onClick={handleCancel}
                       >
-                        <X className="h-4 w-4" />
+                        <X size={16} />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -137,60 +113,100 @@ const TranscriptionDisplay = ({
                 </TooltipProvider>
               </>
             ) : (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={handleEdit}
-                      disabled={isProcessing || !transcription}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Edit transcription</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                        onClick={handleEdit}
+                        disabled={isProcessing || !transcription}
+                      >
+                        <Edit size={16} />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Edit transcription</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-gray-600 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:bg-gray-700 transition-colors"
+                        onClick={handleCopyToClipboard}
+                        disabled={isProcessing || !transcription}
+                      >
+                        <Copy size={16} />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Copy to clipboard</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-colors"
+                        onClick={handleDownload}
+                        disabled={isProcessing || !transcription}
+                      >
+                        <Download size={16} />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Download as text file</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </>
             )}
           </div>
         </div>
-        {timestamp && (
-          <p className="text-xs text-gray-500 mt-1">Recorded: {timestamp}</p>
-        )}
       </CardHeader>
-      <CardContent className="p-4 flex-grow overflow-auto">
+      <CardContent className="p-0 flex-1 overflow-auto">
         {isProcessing ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <div className="animate-pulse flex space-x-2 justify-center mb-4">
-                <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
-                <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
-                <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
+          <div className="h-full flex items-center justify-center p-8">
+            <div className="flex flex-col items-center space-y-4">
+              <div className="relative w-16 h-16">
+                <div className="absolute inset-0 rounded-full border-4 border-t-indigo-500 border-r-transparent border-b-transparent border-l-transparent animate-spin"></div>
+                <div className="absolute inset-2 rounded-full border-4 border-t-transparent border-r-blue-500 border-b-transparent border-l-transparent animate-spin animation-delay-150"></div>
+                <div className="absolute inset-4 rounded-full border-4 border-t-transparent border-r-transparent border-b-blue-300 border-l-transparent animate-spin animation-delay-300"></div>
               </div>
-              <p className="text-gray-500">Processing your recording...</p>
+              <p className="text-gray-500 dark:text-gray-400 text-center">
+                Converting your speech into text...<br />This may take a moment.
+              </p>
             </div>
           </div>
+        ) : isEditing ? (
+          <Textarea
+            value={editedText}
+            onChange={(e) => setEditedText(e.target.value)}
+            className="border-0 shadow-none resize-none h-full rounded-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-4 bg-white dark:bg-slate-800 dark:text-gray-200"
+            placeholder="Your transcription will appear here..."
+          />
         ) : (
-          <div className="h-full">
-            {isEditing ? (
-              <Textarea
-                className="w-full h-full min-h-[400px] p-5 text-base resize-none focus:ring-2 focus:ring-blue-500 bg-slate-50 dark:bg-slate-900/50 rounded-lg shadow-inner border-slate-200 dark:border-slate-700"
-                value={editedText}
-                onChange={(e) => setEditedText(e.target.value)}
-                placeholder="Your transcription will appear here"
-              />
-            ) : (
-              <div className="w-full h-full overflow-auto p-5 text-base whitespace-pre-wrap bg-slate-50 dark:bg-slate-900/50 rounded-lg my-2 shadow-inner">
-                {editedText ||
-                  "No transcription available yet. Record something to get started."}
-              </div>
-            )}
+          <div className="p-4 h-full overflow-auto whitespace-pre-wrap text-gray-700 dark:text-gray-300 leading-relaxed">
+            {transcription || "No transcription available. Record something to see it here."}
           </div>
         )}
       </CardContent>
+      
+      {/* Feedback for Copy operation */}
+      {showCopyFeedback && (
+        <div className="absolute top-4 right-4 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-100 px-3 py-1 rounded-md shadow-md text-sm font-medium animate-fade-in-out">
+          Copied to clipboard!
+        </div>
+      )}
     </Card>
   );
 };
